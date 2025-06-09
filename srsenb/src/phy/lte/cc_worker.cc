@@ -619,6 +619,16 @@ int cc_worker::encode_pdsch(stack_interface_phy_lte::dl_sched_grant_t* grants, u
       for (uint32_t j = 0; j < SRSRAN_MAX_CODEWORDS; j++) {
         dl_cfg.pdsch.softbuffers.tx[j] = grants[i].softbuffer_tx[j];
       }
+      //printf("grant[i].has_subband_cqi = %d\n", grants[i].has_subband_cqi);
+
+//testttt
+
+      if (grants[i].has_subband_cqi) {
+       std::memcpy(dl_cfg.pdsch.subband_cqi, grants[i].subband_cqi, sizeof(grants[i].subband_cqi));
+       dl_cfg.pdsch.has_subband_cqi = true;
+       dl_cfg.pdsch.nof_subbands = grants[i].nof_subbands;
+      }
+
 
       // Encode PDSCH
       if (srsran_enb_dl_put_pdsch(&enb_dl, &dl_cfg.pdsch, grants[i].data)) {

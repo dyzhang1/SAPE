@@ -158,6 +158,9 @@ public:
     uint16_t  rnti;
     rbgmask_t user_mask;
     uint32_t  pid;
+    bool    has_subband_cqi = false;
+    uint8_t subband_cqi[SRSRAN_MAX_PRB] = {};
+    uint32_t                nof_subbands; 
   };
   struct ul_alloc_t {
     enum type_t { NEWTX, NOADAPT_RETX, ADAPT_RETX };

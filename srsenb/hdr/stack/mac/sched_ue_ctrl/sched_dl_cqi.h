@@ -51,6 +51,7 @@ public:
     srsran_assert(K <= 4, "K=%d outside of {0, 4}", K);
     srsran_assert(K == 0 or cell_nof_prb_ > 6, "K > 0 not allowed for nof_prbs=6");
   }
+  uint32_t prb_to_sb_index(uint32_t prb_index) const { return prb_index * N() / cell_nof_prb; }
 
   /// Set K value from upper layers. See TS 36.331, CQI-ReportPeriodic
   void set_K(uint32_t K_)
@@ -208,7 +209,6 @@ private:
 
   uint32_t get_bp_index(uint32_t sb_index) const { return sb_index * J() / N(); }
 
-  uint32_t prb_to_sb_index(uint32_t prb_index) const { return prb_index * N() / cell_nof_prb; }
 
   srsran::interval<uint32_t> get_bp_sb_indexes(uint32_t bp_idx) const
   {

@@ -59,7 +59,10 @@ typedef struct SRSRAN_API {
   bool                  power_scale;
   bool                  csi_enable;
   bool                  use_tbs_index_alt;
-
+  bool     has_subband_cqi;
+  uint8_t  subband_cqi[SRSRAN_MAX_PRB]; // 每个 RB 一个 CQI
+  uint32_t                nof_subbands; 
+  
   union {
     srsran_softbuffer_tx_t* tx[SRSRAN_MAX_CODEWORDS];
     srsran_softbuffer_rx_t* rx[SRSRAN_MAX_CODEWORDS];

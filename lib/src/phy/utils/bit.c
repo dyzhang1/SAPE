@@ -736,6 +736,35 @@ void srsran_bit_unpack(uint32_t value, uint8_t** bits, int nof_bits)
   *bits += nof_bits;
 }
 
+//testtt
+void srsran_bit_pack_to_buffer(uint8_t value, uint8_t* buff, uint32_t* bit_offset, int nof_bits)
+{
+  for (int i = 0; i < nof_bits; ++i) {
+    int bit_val = (value >> (nof_bits - 1 - i)) & 0x01;
+    uint32_t byte_idx = *bit_offset / 8;
+    uint32_t bit_idx = 7 - (*bit_offset % 8);
+    buff[byte_idx] &= ~(1 << bit_idx);
+    buff[byte_idx] |= (bit_val << bit_idx);
+    (*bit_offset)++;
+  }
+}
+
+uint8_t srsran_bit_unpack_from_buffer(uint8_t* buff, uint32_t* bit_offset, int nof_bits)
+{
+  uint8_t value = 0;
+  for (int i = 0; i < nof_bits; ++i) {
+    uint32_t byte_i = *bit_offset / 8;
+    uint32_t bit_i  = 7 - (*bit_offset % 8);
+    uint8_t bit     = (buff[byte_i] >> bit_i) & 0x01;
+    value |= (bit << (nof_bits - 1 - i));
+    (*bit_offset)++;
+  }
+  return value;
+}
+
+
+
+
 /**
  * Unpacks nof_bits from LSBs of value in LSB order to *bits. Advances pointer past unpacked bits.
  *

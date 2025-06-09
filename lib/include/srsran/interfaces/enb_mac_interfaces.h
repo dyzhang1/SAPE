@@ -50,6 +50,9 @@ public:
     srsran_dci_dl_t         dci                          = {};
     uint8_t*                data[SRSRAN_MAX_TB]          = {};
     srsran_softbuffer_tx_t* softbuffer_tx[SRSRAN_MAX_TB] = {};
+    uint8_t                 subband_cqi[SRSRAN_MAX_PRB]; 
+    bool                   has_subband_cqi;
+    uint32_t                nof_subbands;
   };
 
   /**

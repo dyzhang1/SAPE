@@ -57,7 +57,7 @@ sched_ue_cell::sched_ue_cell(uint16_t rnti_, const sched_cell_params_t& cell_cfg
   fixed_mcs_ul(cell_cfg_.sched_cfg->pusch_mcs),
   current_tti(current_tti_),
   max_aggr_level(cell_cfg_.sched_cfg->max_aggr_level >= 0 ? cell_cfg_.sched_cfg->max_aggr_level : 3),
-  dl_cqi_ctxt(cell_cfg_.nof_prb(), 0, cell_cfg_.sched_cfg->init_dl_cqi)
+  dl_cqi_ctxt(cell_cfg_.nof_prb(), 4, cell_cfg_.sched_cfg->init_dl_cqi)
 {
   float target_bler = cell_cfg->sched_cfg->target_bler;
   dl_delta_inc      = cell_cfg->sched_cfg->adaptive_dl_mcs_step_size; // delta_{down} of OLLA
@@ -98,7 +98,7 @@ void sched_ue_cell::set_ue_cfg(const sched_interface::ue_cfg_t& ue_cfg_)
 
   if (ue_cc_idx >= 0) {
     const auto& cc = ue_cfg_.supported_cc_list[ue_cc_idx];
-    if (cc.dl_cfg.cqi_report.periodic_configured) {
+    if (cc.dl_cfg.cqi_report.periodic_configured && cc.dl_cfg.cqi_report.subband_wideband_ratio > 0) {
       dl_cqi_ctxt.set_K(cc.dl_cfg.cqi_report.subband_wideband_ratio);
     }
   }

@@ -1123,10 +1123,112 @@ int srsran_pdsch_encode(srsran_pdsch_t*     q,
       }
     }
 
+// === Predistortion based on subband CQI ===
+if (cfg->has_subband_cqi && cfg->subband_cqi != NULL) {
+  //printf("=== Subband CQI info ===\n");
+
+  uint32_t nof_subbands = cfg->nof_subbands;
+  uint32_t nof_prb      = q->cell.nof_prb; 
+  
+  // for (uint32_t sb = 0; sb < nof_subbands; ++sb) {
+  //   uint32_t rb_start = sb * nof_prb / nof_subbands;
+  //  // printf("SB %u: CQI = %u\n", sb, cfg->subband_cqi[rb_start]);
+  // }
+
+  // uint32_t nof_subbands = cfg->nof_subbands;
+  // uint32_t nof_prb      = q->cell.nof_prb;
+
+  float amp[15] = {1.0f};
+
+  static float cqi_to_snr_table[15] = {
+      1.95, 4, 6, 8, 10, 11.95, 14.05, 16,
+      17.9, 20.9, 22.5, 24.75, 25.5, 27.30, 29
+  }; //3ghz /plot the cqi through time/ plot the uhd freq uhd_fft —help
+
+
+  // Compute linear amplitude from CQI→SNR→amplitude
+  for (uint32_t sb = 0; sb < nof_subbands; ++sb) {
+      uint32_t rb_start = sb * nof_prb / nof_subbands;
+      uint8_t cqi = cfg->subband_cqi[rb_start];
+      if (cqi < 15) {
+          float snr_db = cqi_to_snr_table[cqi];
+          amp[sb] = powf(10.0f, snr_db / 20.0f);
+          float raw_amp = powf(10.0f, snr_db / 20.0f);
+          amp[sb] = (raw_amp > 100.0f) ? 100.0f : raw_amp; // 最大增益保护
+
+        //  printf("SB %u: AMP = %f\n", sb, amp[sb]);
+
+      } else {
+          amp[sb] = 1.0f; // fallback
+      }
+  }
+  float power_before = 0.0f;
+  for (uint32_t port = 0; port < q->cell.nof_ports; ++port) {
+      for (uint32_t i = 0; i < cfg->grant.nof_re; ++i) {
+          power_before += cabsf(q->symbols[port][i]) * cabsf(q->symbols[port][i]);
+      }
+  }
+  uint32_t re_idx = 0;
+  for (uint32_t rb = 0; rb < q->cell.nof_prb; ++rb) {
+      if (!cfg->grant.prb_idx[0][rb]) continue;
+  
+      // 当前 PRB 属于哪个 subband
+      uint32_t sb_idx = (rb * cfg->nof_subbands) / q->cell.nof_prb;
+  
+      for (uint32_t k = 0; k < 12; ++k) {
+          if (re_idx >= cfg->grant.nof_re) break;  // 保证索引不越界
+  
+          for (uint32_t port = 0; port < q->cell.nof_ports; ++port) {
+              q->symbols[port][re_idx] /= amp[sb_idx];
+          }
+          re_idx++;
+      }
+  }
+  
+
+  float power_after = 0.0f;
+  for (uint32_t port = 0; port < q->cell.nof_ports; ++port) {
+      for (uint32_t i = 0; i < cfg->grant.nof_re; ++i) {
+          power_after += cabsf(q->symbols[port][i]) * cabsf(q->symbols[port][i]);
+      }
+  }
+  
+  float norm_factor = sqrtf(power_before / power_after);
+  for (uint32_t port = 0; port < q->cell.nof_ports; ++port) {
+      for (uint32_t i = 0; i < cfg->grant.nof_re; ++i) {
+          q->symbols[port][i] *= norm_factor;
+      }
+  }
+ // printf("Power before = %.3f, after = %.3f, norm = %.3f\n", power_before, power_after, norm_factor);
+
+}
+
+
+
+
+
+
     /* mapping to resource elements */
     uint32_t lstart = SRSRAN_NOF_CTRL_SYMBOLS(q->cell, sf->cfi);
     for (i = 0; i < q->cell.nof_ports; i++) {
       srsran_pdsch_put(q, q->symbols[i], sf_symbols[i], &cfg->grant, lstart, sf->tti % 10);
+
+
+// ///testtttt
+// int rb_start = -1;
+// int rb_len = 0;
+
+// for (int rb = 0; rb < SRSRAN_MAX_PRB; rb++) {
+//     if (cfg->grant.prb_idx[0][rb]) {
+//         if (rb_start == -1) rb_start = rb;
+//         rb_len++;
+//     }
+// }
+
+
+
+
+
     }
 
     if (cfg->meas_time_en) {

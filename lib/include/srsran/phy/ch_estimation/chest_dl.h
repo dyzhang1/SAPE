@@ -65,6 +65,11 @@ typedef struct SRSRAN_API {
   float    rssi_dbm;
   float    cfo;
   float    sync_error;
+  #define MAX_NUM_SUBBANDS 25  
+
+uint32_t subband_cqi[MAX_NUM_SUBBANDS];
+uint32_t num_subbands;
+
 } srsran_chest_dl_res_t;
 
 // Noise estimation algorithm

@@ -601,6 +601,12 @@ static int encode_bits(srsran_pucch_cfg_t*   cfg,
         ERROR("Error encoding CQI");
         return SRSRAN_ERROR;
       }
+      // test
+// printf("[UE] CQI packed bitlen = %d\n", uci_cqi_len);
+// for (int i = 0; i < (uci_cqi_len + 7) / 8; ++i) {
+//   printf("[UE] CQI buff[%d] = 0x%02X\n", i, buff[i]);
+// }
+
       srsran_uci_encode_cqi_pucch(buff, (uint32_t)uci_cqi_len, pucch_bits);
     }
     if (format > SRSRAN_PUCCH_FORMAT_2) {
@@ -704,8 +710,11 @@ static bool decode_signal(srsran_pucch_t*     q,
 
       // Calculate the LLR RMS for normalising
       float llr_pow = srsran_vec_avg_power_sf(llr_pucch2, SRSRAN_PUCCH2_NOF_BITS);
-
-      if (isnormal(llr_pow)) {
+      // printf("[eNB] LLR values:\n");
+      // for (int i = 0; i < 10; ++i) {
+      //   printf("llr[%d] = %d\n", i, llr_pucch2[i]);
+      // }
+            if (isnormal(llr_pow)) {
         float llr_rms = sqrtf(llr_pow) * SRSRAN_PUCCH2_NOF_BITS;
         corr          = ((float)srsran_uci_decode_cqi_pucch(&q->cqi, llr_pucch2, pucch_bits, nof_uci_bits)) / (llr_rms);
       } else {
@@ -733,11 +742,40 @@ static void decode_bits(srsran_pucch_cfg_t* cfg,
                         uint8_t             pucch2_bits[SRSRAN_PUCCH_MAX_BITS],
                         srsran_uci_value_t* uci_data)
 {
+
+  
+
   if (cfg->format == SRSRAN_PUCCH_FORMAT_3) {
-    uint32_t nof_ack = srsran_uci_cfg_total_ack(&cfg->uci_cfg);
-    memcpy(uci_data->ack.ack_value, pucch_bits, nof_ack);
-    uci_data->scheduling_request = (pucch_bits[nof_ack] == 1);
-    uci_data->ack.valid          = pucch_found;
+    // uint32_t nof_ack = srsran_uci_cfg_total_ack(&cfg->uci_cfg);
+    // memcpy(uci_data->ack.ack_value, pucch_bits, nof_ack);
+    // uci_data->scheduling_request = (pucch_bits[nof_ack] == 1);
+    // uci_data->ack.valid          = pucch_found;
+
+    //testttt
+      uint32_t nof_ack = srsran_uci_cfg_total_ack(&cfg->uci_cfg);
+      uint32_t bit_offset = 0;
+    
+      // Copy ACK
+      memcpy(uci_data->ack.ack_value, pucch_bits, nof_ack);
+      uci_data->ack.valid = pucch_found;
+      bit_offset += nof_ack;
+    
+      // Copy SR if configured
+      if (cfg->uci_cfg.is_scheduling_request_tti) {
+        uci_data->scheduling_request = (pucch_bits[bit_offset] == 1);
+        bit_offset += 1;
+      }
+    
+      // Copy CQI if configured
+      if (cfg->uci_cfg.cqi.data_enable) {
+        srsran_cqi_value_unpack(&cfg->uci_cfg.cqi, &pucch_bits[bit_offset], &uci_data->cqi);
+      }
+    
+
+
+
+
+
   } else {
     // If was looking for scheduling request, update value
     if (cfg->uci_cfg.is_scheduling_request_tti) {
@@ -757,7 +795,10 @@ static void decode_bits(srsran_pucch_cfg_t* cfg,
     if (cfg->uci_cfg.cqi.data_enable) {
       srsran_cqi_value_unpack(&cfg->uci_cfg.cqi, pucch_bits, &uci_data->cqi);
     }
-
+    // printf("[eNB] PUCCH raw bits:\n");
+    // for (int i = 0; i < 3; ++i) {
+    //   printf("[eNB] pucch_bits[%d] = 0x%02X\n", i, pucch_bits[i]);
+    // }
     if (cfg->uci_cfg.cqi.ri_len) {
       uci_data->ri = pucch_bits[0]; /* Assume only one bit of RI */
     }
@@ -841,11 +882,16 @@ int srsran_pucch_decode(srsran_pucch_t*        q,
 
     // Perform ML-decoding
     bool pucch_found = decode_signal(q, sf, cfg, pucch_bits, nof_re, nof_uci_bits, &data->correlation);
-
+// // 🔍 打印 raw PUCCH 比特内容
+// printf("[eNB] PUCCH decoded bits (%d bits):\n", nof_uci_bits);
+// for (uint32_t i = 0; i < nof_uci_bits; i++) {
+//   printf("bit[%2d] = %d\n", i, pucch_bits[i]);
+// }
     // Convert bits to UCI data
     decode_bits(cfg, pucch_found, pucch_bits, cfg->pucch2_drs_bits, &data->uci_data);
 
     data->detected = pucch_found;
+   // printf("found = %d\n", pucch_found);
 
     // Accept ACK and CQI only if correlation above threshold
     switch (cfg->format) {
@@ -857,6 +903,8 @@ int srsran_pucch_decode(srsran_pucch_t*        q,
       case SRSRAN_PUCCH_FORMAT_2A:
       case SRSRAN_PUCCH_FORMAT_2B:
         data->detected              = data->correlation > cfg->threshold_data_valid_format2;
+ //       printf("correlation = %f\n",data->correlation);
+
         data->uci_data.ack.valid    = data->detected;
         data->uci_data.cqi.data_crc = data->detected;
         break;

@@ -848,6 +848,10 @@ void srsran_ue_dl_gen_cqi_periodic(srsran_ue_dl_t*     q,
                                    uint32_t            tti,
                                    srsran_uci_data_t*  uci_data)
 {
+  //printf("period is Subband CQI = %d\n", srsran_cqi_periodic_is_subband(&cfg->cfg.cqi_report, tti, q->cell.nof_prb, q->cell.frame_type));
+
+  cfg->cfg.cqi_report.format_is_subband=true;
+
   if (srsran_cqi_periodic_ri_send(&cfg->cfg.cqi_report, tti, q->cell.frame_type)) {
     /* Compute RI, PMI and SINR */
     if (q->nof_rx_antennas > 1) {
@@ -865,12 +869,41 @@ void srsran_ue_dl_gen_cqi_periodic(srsran_ue_dl_t*     q,
     if (cfg->cfg.cqi_report.format_is_subband &&
         srsran_cqi_periodic_is_subband(&cfg->cfg.cqi_report, tti, q->cell.nof_prb, q->cell.frame_type)) {
       // TODO: Implement subband periodic reports
-      uci_data->cfg.cqi.type                       = SRSRAN_CQI_TYPE_SUBBAND_UE;
-      uci_data->value.cqi.subband_ue.subband_cqi   = wideband_value;
-      uci_data->value.cqi.subband_ue.subband_label = tti / 100 % 2;
-      uci_data->cfg.cqi.L                          = srsran_cqi_hl_get_L(q->cell.nof_prb);
-      uci_data->cfg.cqi.subband_label_2_bits       = uci_data->cfg.cqi.L > 1;
-    } else {
+
+
+      //testttt
+
+      //uci_data->cfg.cqi.data_enable                   = true;
+      uci_data->cfg.cqi.type                       = SRSRAN_CQI_TYPE_SUBBAND_HL;;
+      //printf("ue dl TYPE = %d\n", uci_data->cfg.cqi.type);
+
+      uci_data->value.cqi.subband_hl.wideband_cqi_cw0   = wideband_value;
+      for (uint32_t i = 0; i < q->chest_res.num_subbands; ++i) {
+        int8_t cqi = q->chest_res.subband_cqi[i];
+        //printf("UE Subband %u CQI = %d\n", i, cqi);
+        uci_data->value.cqi.subband_hl.subband_diff_cqi_cw0[i] = cqi - wideband_value;
+
+      }
+      //uci_data->cfg.cqi.N = (q->cell.nof_prb > 7) ? (uint32_t)srsran_cqi_hl_get_no_subbands(q->cell.nof_prb) : 0;
+      uci_data->cfg.cqi.N = 4;
+
+      uci_data->cfg.cqi.data_enable = true;
+
+      /* Set RI = 1 */
+      if (cfg->cfg.tm == SRSRAN_TM3 || cfg->cfg.tm == SRSRAN_TM4) {
+        if (q->nof_rx_antennas > 1) {
+          srsran_ue_dl_select_ri(q, &cfg->last_ri, NULL);
+          uci_data->value.ri       = (uint8_t)cfg->last_ri;
+          uci_data->cfg.cqi.ri_len = 1;
+        } else {
+          uci_data->value.ri = 0;
+        }
+      } else {
+        uci_data->cfg.cqi.ri_len = 0;
+      }    } 
+    
+    
+    else {
       uci_data->cfg.cqi.type                    = SRSRAN_CQI_TYPE_WIDEBAND;
       uci_data->value.cqi.wideband.wideband_cqi = wideband_value;
       if (cfg->cfg.tm == SRSRAN_TM4) {
@@ -893,6 +926,9 @@ void srsran_ue_dl_gen_cqi_aperiodic(srsran_ue_dl_t*     q,
                                     uint32_t            wideband_value,
                                     srsran_uci_data_t*  uci_data)
 {
+
+  printf("aperiod Subband CQI = %d\n", cfg->cfg.cqi_report.format_is_subband);
+
   uint32_t pmi     = 0;
   float    sinr_db = 0.0f;
 
@@ -912,7 +948,16 @@ void srsran_ue_dl_gen_cqi_aperiodic(srsran_ue_dl_t*     q,
       uci_data->value.cqi.subband_hl.wideband_cqi_cw0 = wideband_value;
 
       // TODO: implement subband CQI properly
-      uci_data->value.cqi.subband_hl.subband_diff_cqi_cw0 = 0; // Always report zero offset on all subbands
+
+      //test
+      for (uint32_t i = 0; i < q->chest_res.num_subbands; ++i) {
+        int8_t cqi = q->chest_res.subband_cqi[i];
+        uci_data->value.cqi.subband_hl.subband_diff_cqi_cw0[i] = cqi - wideband_value;
+        printf("aperiod 30 Subband %u CQI = %d\n", i, cqi);
+
+      }
+
+      // uci_data->value.cqi.subband_hl.subband_diff_cqi_cw0 = 0; // Always report zero offset on all subbands
       uci_data->cfg.cqi.N = (q->cell.nof_prb > 7) ? (uint32_t)srsran_cqi_hl_get_no_subbands(q->cell.nof_prb) : 0;
       uci_data->cfg.cqi.data_enable = true;
 
@@ -951,8 +996,13 @@ void srsran_ue_dl_gen_cqi_aperiodic(srsran_ue_dl_t*     q,
       uci_data->cfg.cqi.type = SRSRAN_CQI_TYPE_SUBBAND_HL;
 
       uci_data->value.cqi.subband_hl.wideband_cqi_cw0     = srsran_cqi_from_snr(sinr_db + cfg->snr_to_cqi_offset);
-      uci_data->value.cqi.subband_hl.subband_diff_cqi_cw0 = 0; // Always report zero offset on all subbands
+      //test
+      for (uint32_t i = 0; i < q->chest_res.num_subbands; ++i) {
+        int8_t cqi = q->chest_res.subband_cqi[i];
+        uci_data->value.cqi.subband_hl.subband_diff_cqi_cw0[i] = cqi - wideband_value;
+        printf("aperiod 31 Subband %u CQI = %d\n", i, cqi);
 
+      }
       if (cfg->last_ri > 0) {
         uci_data->cfg.cqi.rank_is_not_one                   = true;
         uci_data->value.cqi.subband_hl.wideband_cqi_cw1     = srsran_cqi_from_snr(sinr_db + cfg->snr_to_cqi_offset);

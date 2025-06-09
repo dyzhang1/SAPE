@@ -983,7 +983,60 @@ static void fill_res(srsran_chest_dl_t* q, srsran_chest_dl_res_t* res)
           srsran_convert_power_to_dB(q->cell.nof_prb * q->rsrp[a][port_id] / q->rssi[a][port_id]);
     }
   }
+
+//testttttt
+// ========== Subband CQI (averaged over all antennas) ==========
+const uint32_t nre_per_prb      = SRSRAN_NRE;  
+const uint32_t prbs_per_subband = 4;
+const uint32_t nre_per_sb       = nre_per_prb * prbs_per_subband;
+const uint32_t num_subbands     = 4;
+
+res->num_subbands = num_subbands;
+
+for (uint32_t sb = 0; sb < num_subbands; ++sb) {
+  float power_sum = 0.0f;
+  float noise_sum = 0.0f;
+  uint32_t count = 0;
+
+  uint32_t re_start = sb * nre_per_sb;
+  uint32_t re_end   = re_start + nre_per_sb;
+
+  for (uint32_t a = 0; a < q->nof_rx_antennas; ++a) {
+    for (uint32_t port = 0; port < q->cell.nof_ports; ++port) {
+      cf_t* ce_vec = res->ce[port][a];
+
+      for (uint32_t re = re_start; re < re_end && re < res->nof_re; ++re) {
+        float real = crealf(ce_vec[re]);
+        float imag = cimagf(ce_vec[re]);
+        float pwr = real * real + imag * imag;
+
+        power_sum += pwr;
+
+        noise_sum += q->noise_estimate[a][port];
+        count++;
+      }
+    }
+  }
+
+  if (count == 0) {
+    res->subband_cqi[sb] = 0;
+    continue;
+  }
+
+  float avg_power = power_sum / count;
+  float avg_noise = noise_sum / count;
+
+  float snr_lin = avg_power / avg_noise;
+  float snr_db  = srsran_convert_power_to_dB(snr_lin);
+
+  uint8_t cqi = srsran_cqi_from_snr(snr_db);
+  res->subband_cqi[sb] = cqi;
+
 }
+
+
+}
+
 
 int srsran_chest_dl_estimate(srsran_chest_dl_t*     q,
                              srsran_dl_sf_cfg_t*    sf,
@@ -1002,6 +1055,7 @@ int srsran_chest_dl_estimate_cfg(srsran_chest_dl_t*     q,
                                  cf_t*                  input[SRSRAN_MAX_PORTS],
                                  srsran_chest_dl_res_t* res)
 {
+
   for (uint32_t rxant_id = 0; rxant_id < q->nof_rx_antennas; rxant_id++) {
     // Estimate and correct synchronization error if enabled
     if (cfg->sync_error_enable) {

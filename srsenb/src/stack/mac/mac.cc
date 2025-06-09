@@ -669,6 +669,17 @@ int mac::get_dl_sched(uint32_t tti_tx_dl, dl_sched_list_t& dl_sched_res_list)
       uint16_t rnti = sched_result.data[i].dci.rnti;
 
       if (ue_db.contains(rnti)) {
+        
+        // testtttt
+        dl_sched_res->pdsch[n].has_subband_cqi = sched_result.data[i].pdsch_cfg.has_subband_cqi;
+        dl_sched_res->pdsch[n].nof_subbands = sched_result.data[i].pdsch_cfg.nof_subbands;
+
+        std::memcpy(dl_sched_res->pdsch[n].subband_cqi,
+            sched_result.data[i].pdsch_cfg.subband_cqi,
+            sizeof(dl_sched_res->pdsch[n].subband_cqi));
+
+
+        
         // Copy dci info
         dl_sched_res->pdsch[n].dci = sched_result.data[i].dci;
 

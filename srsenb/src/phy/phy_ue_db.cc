@@ -589,6 +589,9 @@ int phy_ue_db::fill_uci_cfg(uint32_t          tti,
       const srsran_cell_t& cell = cell_cfg_list->at(cell_info.enb_cc_idx).cell;
 
       // Check if CQI report is required
+
+
+      
       periodic_cqi_required = srsran_enb_dl_gen_cqi_periodic(&cell, &dl_cfg, tti, cell_info.last_ri, &uci_cfg.cqi);
 
       // Save SCell index for using it after
@@ -626,6 +629,10 @@ void phy_ue_db::send_cqi_data(uint32_t                      tti,
                              const srsran_cell_t&           cell,
                              stack_interface_phy_lte*       stack)
 {
+  // printf("L = %d\n", cqi_cfg.L);
+  // printf("TYPE = %d\n", cqi_cfg.type);
+
+
   uint8_t  stack_value = 0;
   switch (cqi_cfg.type) {
     case SRSRAN_CQI_TYPE_WIDEBAND:
@@ -640,19 +647,34 @@ void phy_ue_db::send_cqi_data(uint32_t                      tti,
                          srsran_cqi_get_sb_idx(tti, cqi_value.subband_ue.subband_label, &cqi_report_cfg, &cell),
                          stack_value);
       break;
-    case SRSRAN_CQI_TYPE_SUBBAND_HL:
+      case SRSRAN_CQI_TYPE_SUBBAND_HL: {
+        // 每个 subband: cqi = wideband_cqi + diff
+        for (uint32_t i = 0; i < cqi_cfg.L; ++i) {
+          uint32_t sb_idx = i;  // 如果你没有复杂的 subband mapping，直接用 i 就行
+          uint8_t sb_cqi = cqi_value.subband_ue_diff.wideband_cqi + cqi_value.subband_ue_diff.subband_diff_cqi[i];
+         // printf("UE Subband %u CQI = %d\n", i, sb_cqi);
+  
+          // 防止越界（CQI最多15）
+          if (sb_cqi > 15)
+            sb_cqi = 15;
+       
+          stack->sb_cqi_info(tti, rnti, cqi_cc_idx, sb_idx, sb_cqi);
+        }
+        break;  
+    case SRSRAN_CQI_TYPE_SUBBAND_UE_DIFF:
       stack_value = cqi_value.subband_hl.wideband_cqi_cw0;
       // Todo: change interface
       stack->cqi_info(tti, rnti, cqi_cc_idx, stack_value);
       break;
-    case SRSRAN_CQI_TYPE_SUBBAND_UE_DIFF:
-      stack_value = cqi_value.subband_ue_diff.wideband_cqi;
-      stack->sb_cqi_info(tti,
-                         rnti,
-                         cqi_cc_idx,
-                         cqi_value.subband_ue_diff.position_subband,
-                         stack_value + cqi_value.subband_ue_diff.subband_diff_cqi);
-      break;
+
+    }
+     // stack_value = cqi_value.subband_ue_diff.wideband_cqi;
+     // stack->sb_cqi_info(tti,
+      //                   rnti,
+       //                  cqi_cc_idx,
+        //                 cqi_value.subband_ue_diff.position_subband,
+          //               stack_value + cqi_value.subband_ue_diff.subband_diff_cqi);
+     // break;
   }
 }
 
@@ -662,6 +684,8 @@ int phy_ue_db::send_uci_data(uint32_t                  tti,
                              const srsran_uci_cfg_t&   uci_cfg,
                              const srsran_uci_value_t& uci_value)
 {
+ // printf("enabled = %d\n", uci_value.cqi.data_crc);
+  
   std::lock_guard<std::mutex> lock(mutex);
 
   // Assert UE RNTI database entry and eNb cell/carrier must be active
@@ -725,6 +749,9 @@ int phy_ue_db::send_uci_data(uint32_t                  tti,
           pmi_value = uci_value.cqi.wideband.pmi;
           break;
         case SRSRAN_CQI_TYPE_SUBBAND_HL:
+          pmi_value = uci_value.cqi.subband_hl.pmi;
+          break;
+        case SRSRAN_CQI_TYPE_SUBBAND_UE_DIFF:
           pmi_value = uci_value.cqi.subband_hl.pmi;
           break;
         default:

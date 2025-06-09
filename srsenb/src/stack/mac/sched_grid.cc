@@ -699,7 +699,7 @@ void sf_sched::set_dl_data_sched_result(const sf_cch_allocator::alloc_result_t& 
                                         sched_interface::dl_sched_res_t*        dl_result,
                                         sched_ue_list&                          ue_list)
 {
-  for (const auto& data_alloc : data_allocs) {
+  for (auto& data_alloc : data_allocs) {
     dl_result->data.emplace_back();
     sched_interface::dl_sched_data_t* data = &dl_result->data.back();
 
@@ -715,6 +715,55 @@ void sf_sched::set_dl_data_sched_result(const sf_cch_allocator::alloc_result_t& 
     uint32_t            data_before = user->get_pending_dl_bytes(cc_cfg->enb_cc_idx);
     const dl_harq_proc& dl_harq     = user->get_dl_harq(data_alloc.pid, cc_cfg->enb_cc_idx);
     bool                is_newtx    = dl_harq.is_empty();
+
+
+// testtttt
+sched_ue_cell* ue_cell = user->find_ue_carrier(cc_cfg->enb_cc_idx);
+if (ue_cell == nullptr) {
+  return;
+}
+const sched_dl_cqi& cqi = ue_cell->dl_cqi();
+
+data->pdsch_cfg.has_subband_cqi = cqi.subband_cqi_enabled();
+//printf("subband_cqi_enabled=%d\n", cqi.subband_cqi_enabled());
+
+if (cqi.subband_cqi_enabled()) {
+  data->pdsch_cfg.has_subband_cqi = true;
+
+  static uint8_t tmp_cqi[SRSRAN_MAX_PRB] = {};
+  // for (uint32_t rb = 0; rb < cc_cfg->nof_prb(); ++rb) {
+  //   tmp_cqi[rb] = cqi.get_subband_cqi(cqi.prb_to_sb_index(rb));
+  //  //tmp_cqi[rb] = 1;  
+
+  // }
+  uint32_t nof_rb   = cc_cfg->nof_prb();     // 50
+uint32_t nof_sb   = 4;                     // Only 4 subbands reported by UE
+uint32_t rb_per_sb = nof_rb / nof_sb;      // 12
+
+for (uint32_t sb = 0; sb < nof_sb; ++sb) {
+  uint8_t cqi_val = cqi.get_subband_cqi(sb);
+  for (uint32_t i = 0; i < rb_per_sb; ++i) {
+    uint32_t rb = sb * rb_per_sb + i;
+    if (rb < SRSRAN_MAX_PRB) {
+      tmp_cqi[rb] = cqi_val;
+    }
+  }
+}
+
+  data->pdsch_cfg.has_subband_cqi = true;
+  std::memcpy(data->pdsch_cfg.subband_cqi, tmp_cqi, sizeof(tmp_cqi));
+
+data_alloc.has_subband_cqi = true;
+std::memcpy(data_alloc.subband_cqi, tmp_cqi, sizeof(tmp_cqi));
+// uint32_t nof_sb = cqi.nof_subbands();
+data->pdsch_cfg.nof_subbands = 4;
+data_alloc.nof_subbands      = 4;
+} 
+
+else {
+  data->pdsch_cfg.has_subband_cqi = false;
+}
+
 
     int tbs = user->generate_dl_dci_format(
         data_alloc.pid, data, get_tti_tx_dl(), cc_cfg->enb_cc_idx, tti_alloc.get_cfi(), data_alloc.user_mask);

@@ -46,6 +46,8 @@ typedef struct {
   uint8_t*  bit_mask;
   uint8_t   n_128;
 } srsran_bit_interleaver_t;
+void    srsran_bit_pack_to_buffer(uint8_t value, uint8_t* buff, uint32_t* bit_offset, int nof_bits);
+uint8_t srsran_bit_unpack_from_buffer(uint8_t* buff, uint32_t* bit_offset, int nof_bits);
 
 SRSRAN_API void srsran_bit_interleaver_init(srsran_bit_interleaver_t* q, uint16_t* interleaver, uint32_t nof_bits);
 

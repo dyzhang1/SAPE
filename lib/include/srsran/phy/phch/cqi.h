@@ -73,7 +73,7 @@ typedef struct {
 
 typedef struct SRSRAN_API {
   uint8_t  wideband_cqi_cw0;     // 4-bit width
-  uint32_t subband_diff_cqi_cw0; // 2N-bit width
+  uint32_t subband_diff_cqi_cw0[25]; // 2N-bit width
   uint8_t  wideband_cqi_cw1;     // if RI > 1 then 4-bit width otherwise 0-bit width
   uint32_t subband_diff_cqi_cw1; // if RI > 1 then 2N-bit width otherwise 0-bit width
   uint32_t pmi;                  // if RI > 1 then 2-bit width otherwise 1-bit width
@@ -85,7 +85,7 @@ reports
 transmission mode 8 configured without PMI/RI reporting). */
 typedef struct SRSRAN_API {
   uint8_t  wideband_cqi;     // 4-bit width
-  uint8_t  subband_diff_cqi; // 2-bit width
+  int8_t  subband_diff_cqi[25]; // 2-bit width
   uint32_t position_subband; // L-bit width
 } srsran_cqi_ue_diff_subband_t;
 

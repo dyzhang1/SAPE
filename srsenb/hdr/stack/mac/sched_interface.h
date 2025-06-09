@@ -196,6 +196,8 @@ public:
     bool            mac_ce_rnti;
     uint32_t        nof_pdu_elems[SRSRAN_MAX_TB];
     dl_sched_pdu_t  pdu[SRSRAN_MAX_TB][MAX_RLC_PDU_LIST];
+    srsran_pdsch_cfg_t pdsch_cfg;
+
   };
 
   typedef struct {

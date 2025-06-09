@@ -45,7 +45,12 @@ static int cqi_hl_subband_pack(srsran_cqi_cfg_t* cfg, srsran_cqi_hl_subband_t* m
 
   /* Unpack codeword 0, common for 3GPP 36.212 Tables 5.2.2.6.2-1 and 5.2.2.6.2-2 */
   srsran_bit_unpack(msg->wideband_cqi_cw0, &body_ptr, 4);
-  srsran_bit_unpack(msg->subband_diff_cqi_cw0, &body_ptr, 2 * cfg->N);
+  for (uint32_t i = 0; i < cfg->N; ++i) {
+    int8_t diff = msg->subband_diff_cqi_cw0[i];
+    uint8_t encoded = (diff + 2) & 0x3;  // 映射到 [0, 3]
+    srsran_bit_unpack(encoded, &body_ptr, 2);
+  }
+  
   bit_count += 4 + 2 * cfg->N;
 
   /* Unpack codeword 1, 3GPP 36.212 Table 5.2.2.6.2-2 */
@@ -74,15 +79,88 @@ static int cqi_hl_subband_pack(srsran_cqi_cfg_t* cfg, srsran_cqi_hl_subband_t* m
   return bit_count;
 }
 
+// static int cqi_hl_subband_pack(srsran_cqi_cfg_t* cfg, srsran_cqi_hl_subband_t* msg, uint8_t* buff)
+// {
+//   uint32_t bit_offset = 0;
+//   memset(buff, 0, SRSRAN_CQI_MAX_BITS / 8);  // 清空 buffer
+
+//   // 打印配置
+//   printf("Packing HL Subband CQI:\n");
+//   printf("  - rank_is_not_one = %d\n", cfg->rank_is_not_one);
+//   printf("  - pmi_present = %d\n", cfg->pmi_present);
+//   printf("  - four_antenna_ports = %d\n", cfg->four_antenna_ports);
+
+//   // Codeword 0
+//   srsran_bit_pack_to_buffer(msg->wideband_cqi_cw0, buff, &bit_offset, 4);
+//   for (uint32_t i = 0; i < cfg->N; ++i) {
+//     int8_t diff = msg->subband_diff_cqi_cw0[i];
+//     uint8_t encoded = (diff + 2) & 0x03;
+//     srsran_bit_pack_to_buffer(encoded, buff, &bit_offset, 2);
+//   }
+
+//   // Codeword 1（如果 rank > 1）
+//   if (cfg->rank_is_not_one) {
+//     srsran_bit_pack_to_buffer(msg->wideband_cqi_cw1, buff, &bit_offset, 4);
+//     // for (uint32_t i = 0; i < cfg->N; ++i) {
+//     //   int8_t diff = msg->subband_diff_cqi_cw1[i];
+//     //   uint8_t encoded = (diff + 2) & 0x03;
+//     //   srsran_bit_pack_to_buffer(encoded, buff, &bit_offset, 2);
+//     // }
+//   }
+
+//   // PMI（如果存在）
+//   if (cfg->pmi_present) {
+//     if (cfg->four_antenna_ports) {
+//       srsran_bit_pack_to_buffer(msg->pmi, buff, &bit_offset, 4);
+//     } else {
+//       if (cfg->rank_is_not_one) {
+//         srsran_bit_pack_to_buffer(msg->pmi, buff, &bit_offset, 1);
+//       } else {
+//         srsran_bit_pack_to_buffer(msg->pmi, buff, &bit_offset, 2);
+//       }
+//     }
+//   }
+
+//   return bit_offset;  // 返回打包的总 bit 数
+// }
+
+
 static int cqi_ue_subband_pack(srsran_cqi_cfg_t* cfg, srsran_cqi_ue_diff_subband_t* msg, uint8_t* buff)
 {
   uint8_t* body_ptr = buff;
   srsran_bit_unpack(msg->wideband_cqi, &body_ptr, 4);
-  srsran_bit_unpack(msg->subband_diff_cqi, &body_ptr, 2);
-  srsran_bit_unpack(msg->subband_diff_cqi, &body_ptr, cfg->L);
+  for (uint32_t i = 0; i < cfg->L; ++i) {
+    int8_t diff = msg->subband_diff_cqi[i];
+    uint8_t encoded = (diff + 2) & 0x3;  // 映射到 [0, 3]
+    srsran_bit_unpack(encoded, &body_ptr, 2);
+  }
+  
+  return 4 + 2 * cfg->L;
+  //srsran_bit_unpack(msg->subband_diff_cqi, &body_ptr, cfg->L);
 
-  return 4 + 2 + cfg->L;
+  //return 4 + 2 + cfg->L;
 }
+
+// //testtt
+// static int cqi_ue_subband_pack(srsran_cqi_cfg_t* cfg, srsran_cqi_ue_diff_subband_t* msg, uint8_t* buff)
+// {
+//   memset(buff, 0, SRSRAN_CQI_MAX_BITS); // 清空输出缓冲区
+//   uint32_t bit_offset = 0;
+
+//   // 打包 wideband CQI
+//   srsran_bit_pack_to_buffer(msg->wideband_cqi, buff, &bit_offset, 4);
+
+//   // 打包 subband diff CQI
+//   for (uint32_t i = 0; i < cfg->L; ++i) {
+//     uint8_t encoded = (msg->subband_diff_cqi[i] + 2) & 0x3;
+//     srsran_bit_pack_to_buffer(encoded, buff, &bit_offset, 2);
+//   }
+
+//   return bit_offset;  // 返回bit长度
+// }
+
+
+
 
 /* Pack CQI following 3GPP TS 36.212 Tables 5.2.3.3.1-1 and 5.2.3.3.1-2 */
 static int cqi_format2_wideband_pack(srsran_cqi_cfg_t* cfg, srsran_cqi_format2_wideband_t* msg, uint8_t* buff)
@@ -143,9 +221,16 @@ int cqi_hl_subband_unpack(srsran_cqi_cfg_t* cfg, uint8_t* buff, srsran_cqi_hl_su
   uint32_t bit_count = 0;
 
   msg->wideband_cqi_cw0     = (uint8_t)srsran_bit_pack(&body_ptr, 4);
-  msg->subband_diff_cqi_cw0 = srsran_bit_pack(&body_ptr, 2 * cfg->N);
-  bit_count += 4 + 2 * cfg->N;
-
+  for (uint32_t i = 0; i < cfg->N; ++i) {
+    uint8_t encoded = srsran_bit_pack(&body_ptr, 2);
+    msg->subband_diff_cqi_cw0[i] = (int8_t)encoded - 2;
+  }
+    bit_count += 4 + 2 * cfg->N;
+   // printf("Unpacked wideband CQI = %u\n", msg->wideband_cqi_cw0);
+    // for (uint32_t i = 0; i < cfg->L; ++i) {
+    //   printf("Subband %u diff CQI = %d\n", i, msg->subband_diff_cqi_cw0[i]);
+    // }
+    
   /* Unpack codeword 1, 3GPP 36.212 Table 5.2.2.6.2-2 */
   if (cfg->rank_is_not_one) {
     msg->wideband_cqi_cw1     = (uint8_t)srsran_bit_pack(&body_ptr, 4);
@@ -172,15 +257,95 @@ int cqi_hl_subband_unpack(srsran_cqi_cfg_t* cfg, uint8_t* buff, srsran_cqi_hl_su
   return bit_count;
 }
 
+// int cqi_hl_subband_unpack(srsran_cqi_cfg_t* cfg, uint8_t* buff, srsran_cqi_hl_subband_t* msg)
+// {
+//   uint32_t bit_offset = 0;
+
+//   // 解包 CW0 宽带 CQI
+//   msg->wideband_cqi_cw0 = srsran_bit_unpack_from_buffer(buff, &bit_offset, 4);
+
+//   // 解包 CW0 的 subband 差值
+//   for (uint32_t i = 0; i < cfg->N; ++i) {
+//     uint8_t encoded = srsran_bit_unpack_from_buffer(buff, &bit_offset, 2);
+//     msg->subband_diff_cqi_cw0[i] = (int8_t)encoded - 2;
+//   }
+
+//   printf("Unpacked wideband CQI = %u\n", msg->wideband_cqi_cw0);
+//   for (uint32_t i = 0; i < cfg->N; ++i) {
+//     printf("Subband %u diff CQI = %d\n", i, msg->subband_diff_cqi_cw0[i]);
+//   }
+
+//   // 解包 CW1（如果有 rank > 1）
+//   if (cfg->rank_is_not_one) {
+//     msg->wideband_cqi_cw1 = srsran_bit_unpack_from_buffer(buff, &bit_offset, 4);
+//     // for (uint32_t i = 0; i < cfg->N; ++i) {
+//     //   uint8_t encoded = srsran_bit_unpack_from_buffer(buff, &bit_offset, 2);
+//     //   msg->subband_diff_cqi_cw1[i] = (int8_t)encoded - 2;
+//     // }
+//   }
+
+//   // 解包 PMI（如果需要）
+//   if (cfg->pmi_present) {
+//     if (cfg->four_antenna_ports) {
+//       msg->pmi = srsran_bit_unpack_from_buffer(buff, &bit_offset, 4);
+//     } else {
+//       if (cfg->rank_is_not_one) {
+//         msg->pmi = srsran_bit_unpack_from_buffer(buff, &bit_offset, 1);
+//       } else {
+//         msg->pmi = srsran_bit_unpack_from_buffer(buff, &bit_offset, 2);
+//       }
+//     }
+//   }
+
+//   return bit_offset;
+// }
+
+
+
 int cqi_ue_subband_unpack(srsran_cqi_cfg_t* cfg, uint8_t* buff, srsran_cqi_ue_diff_subband_t* msg)
 {
   uint8_t* body_ptr     = buff;
   msg->wideband_cqi     = srsran_bit_pack(&body_ptr, 4);
-  msg->subband_diff_cqi = srsran_bit_pack(&body_ptr, 2);
-  msg->subband_diff_cqi = srsran_bit_pack(&body_ptr, cfg->L);
+  for (uint32_t i = 0; i < cfg->L; ++i) {
+    uint8_t encoded = srsran_bit_pack(&body_ptr, 2);
+    msg->subband_diff_cqi[i] = (int8_t)encoded - 2;
+  }
+  
+  printf("Unpacked wideband CQI = %u\n", msg->wideband_cqi);
+  for (uint32_t i = 0; i < cfg->L; ++i) {
+    printf("Subband %u diff CQI = %d\n", i, msg->subband_diff_cqi[i]);
+  }
+  
+  return 4 + 2 * cfg->L;
 
-  return 4 + 2 + cfg->L;
+  //msg->subband_diff_cqi = srsran_bit_pack(&body_ptr, cfg->L);
+
+  //return 4 + 2 + cfg->L;
 }
+
+// int cqi_ue_subband_unpack(srsran_cqi_cfg_t* cfg, uint8_t* buff, srsran_cqi_ue_diff_subband_t* msg)
+// {
+//   uint32_t bit_offset = 0;
+
+//   // 解码 wideband CQI
+//   msg->wideband_cqi = srsran_bit_unpack_from_buffer(buff, &bit_offset, 4);
+
+//   // 解码 subband diff CQI
+//   for (uint32_t i = 0; i < cfg->L; ++i) {
+//     uint8_t encoded = srsran_bit_unpack_from_buffer(buff, &bit_offset, 2);
+//     msg->subband_diff_cqi[i] = (int8_t)encoded - 2;
+//   }
+
+//   // Debug 打印
+//   printf("Unpacked wideband CQI = %u\n", msg->wideband_cqi);
+//   for (uint32_t i = 0; i < cfg->L; ++i) {
+//     printf("Subband %u diff CQI = %d\n", i, msg->subband_diff_cqi[i]);
+//   }
+
+//   return bit_offset;
+// }
+
+
 
 /* Unpack CQI following 3GPP TS 36.212 Tables 5.2.3.3.1-1 and 5.2.3.3.1-2 */
 static int cqi_format2_wideband_unpack(srsran_cqi_cfg_t* cfg, uint8_t* buff, srsran_cqi_format2_wideband_t* msg)
@@ -267,7 +432,11 @@ cqi_ue_subband_tostring(srsran_cqi_cfg_t* cfg, srsran_cqi_ue_diff_subband_t* msg
   int n = 0;
 
   n += snprintf(buff + n, buff_len - n, ", cqi=%d", msg->wideband_cqi);
-  n += snprintf(buff + n, buff_len - n, ", diff_cqi=%d", msg->subband_diff_cqi);
+  n += snprintf(buff + n, buff_len - n, ", diff_cqi=[");
+  for (uint32_t i = 0; i < cfg->L; ++i) {
+    n += snprintf(buff + n, buff_len - n, "%d,", msg->subband_diff_cqi[i]);
+  }
+  n += snprintf(buff + n, buff_len - n, "]");
   n += snprintf(buff + n, buff_len - n, ", L=%d", cfg->L);
 
   return n;
@@ -278,8 +447,12 @@ static int cqi_hl_subband_tostring(srsran_cqi_cfg_t* cfg, srsran_cqi_hl_subband_
   int n = 0;
 
   n += snprintf(buff + n, buff_len - n, ", cqi=%d", msg->wideband_cqi_cw0);
-  n += snprintf(buff + n, buff_len - n, ", diff=%d", msg->subband_diff_cqi_cw0);
-
+  n += snprintf(buff + n, buff_len - n, ", diff_cqi=[");
+  for (uint32_t i = 0; i < cfg->N; ++i) {
+    n += snprintf(buff + n, buff_len - n, "%d,", msg->subband_diff_cqi_cw0[i]);
+  }
+  n += snprintf(buff + n, buff_len - n, "]");
+  
   if (cfg->rank_is_not_one) {
     n += snprintf(buff + n, buff_len - n, ", cqi1=%d", msg->wideband_cqi_cw1);
     n += snprintf(buff + n, buff_len - n, ", diff1=%d", msg->subband_diff_cqi_cw1);
@@ -353,7 +526,7 @@ int srsran_cqi_size(srsran_cqi_cfg_t* cfg)
       size = 4 + ((cfg->subband_label_2_bits) ? 2 : 1);
       break;
     case SRSRAN_CQI_TYPE_SUBBAND_UE_DIFF:
-      size = 4 + 2 + cfg->L;
+    size = 4 + 2 * cfg->L;
       break;
     case SRSRAN_CQI_TYPE_SUBBAND_HL:
       /* First codeword */
@@ -645,10 +818,11 @@ bool srsran_cqi_periodic_is_subband(const srsran_cqi_report_cfg_t* cfg,
                                     uint32_t                       nof_prb,
                                     srsran_frame_type_t            frame_type)
 {
-  uint32_t H = cqi_sb_get_H(cfg, nof_prb);
+  //uint32_t H = cqi_sb_get_H(cfg, nof_prb);
 
   // A periodic report is subband if it's a CQI opportunity and is not wideband
-  return srsran_cqi_periodic_send(cfg, tti, frame_type) && !cqi_send(cfg->pmi_idx, tti, frame_type == SRSRAN_FDD, H);
+  //return srsran_cqi_periodic_send(cfg, tti, frame_type) && !cqi_send(cfg->pmi_idx, tti, frame_type == SRSRAN_FDD, H);
+  return true;
 }
 
 uint32_t srsran_cqi_periodic_sb_bw_part_idx(const srsran_cqi_report_cfg_t* cfg,
