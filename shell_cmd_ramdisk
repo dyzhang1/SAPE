@@ -1,0 +1,5 @@
+sudo mkdir -p /mnt/ramdisk
+sudo mount -t tmpfs -o size=100M tmpfs /mnt/ramdisk
+tail -f /mnt/ramdisk/cqi_log.txt
+sudo truncate -s 0 /mnt/ramdisk/cqi_log.txt
+
