@@ -877,11 +877,18 @@ void srsran_ue_dl_gen_cqi_periodic(srsran_ue_dl_t*     q,
       uci_data->cfg.cqi.type                       = SRSRAN_CQI_TYPE_SUBBAND_HL;;
       //printf("ue dl TYPE = %d\n", uci_data->cfg.cqi.type);
 
-      uci_data->value.cqi.subband_hl.wideband_cqi_cw0   = wideband_value;
+     // uci_data->value.cqi.subband_hl.wideband_cqi_cw0   = wideband_value;
+       int32_t sum_cqi = 0;
+      for (uint32_t i = 0; i < 4; ++i) {
+        sum_cqi += q->chest_res.subband_cqi[i];
+      }
+       uint32_t avg_cqi = (uint32_t)((sum_cqi + 2) / 4); // +2 for rounding
+
+      uci_data->value.cqi.subband_hl.wideband_cqi_cw0 = avg_cqi;
       for (uint32_t i = 0; i < q->chest_res.num_subbands; ++i) {
         int8_t cqi = q->chest_res.subband_cqi[i];
         //printf("UE Subband %u CQI = %d\n", i, cqi);
-        uci_data->value.cqi.subband_hl.subband_diff_cqi_cw0[i] = cqi - wideband_value;
+        uci_data->value.cqi.subband_hl.subband_diff_cqi_cw0[i] = cqi - avg_cqi;
 
       }
       //uci_data->cfg.cqi.N = (q->cell.nof_prb > 7) ? (uint32_t)srsran_cqi_hl_get_no_subbands(q->cell.nof_prb) : 0;

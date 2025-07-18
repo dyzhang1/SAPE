@@ -1122,33 +1122,62 @@ int srsran_pdsch_encode(srsran_pdsch_t*     q,
         srsran_vec_sc_prod_cfc(q->d[0], scaling, q->symbols[0], cfg->grant.nof_re);
       }
     }
- static FILE* cqi_log_file = NULL;
- static bool cqi_log_file_opened = false;
+//  static FILE* cqi_log_file = NULL;
+//  static bool cqi_log_file_opened = false;
 
- if (!cqi_log_file_opened) {
-    cqi_log_file = fopen("/mnt/ramdisk/cqi_log.txt", "w");
+//  if (!cqi_log_file_opened) {
+//     cqi_log_file = fopen("/mnt/ramdisk/cqi_log.txt", "w");
 
-     if (cqi_log_file == NULL) {
-         perror("Failed to open subband CQI log file");
-     } else {
-         cqi_log_file_opened = true;
-     }
- }
-// === Predistortion based on subband CQI ===
+//      if (cqi_log_file == NULL) {
+//          perror("Failed to open subband CQI log file");
+//      } else {
+//          cqi_log_file_opened = true;
+//      }
+//  }
+
+
+
+
+
+
+
+    /* mapping to resource elements */
+    uint32_t lstart = SRSRAN_NOF_CTRL_SYMBOLS(q->cell, sf->cfi);
+    for (i = 0; i < q->cell.nof_ports; i++) {
+      srsran_pdsch_put(q, q->symbols[i], sf_symbols[i], &cfg->grant, lstart, sf->tti % 10);
+    }
+
+// ///testtttt
+// int rb_start = -1;
+// int rb_len = 0;
+
+// for (int rb = 0; rb < SRSRAN_MAX_PRB; rb++) {
+//     if (cfg->grant.prb_idx[0][rb]) {
+//         if (rb_start == -1) rb_start = rb;
+//         rb_len++;
+//     }
+// }
+
+
+
+
+
+
+    // === Predistortion based on subband CQI ===
 if (cfg->has_subband_cqi && cfg->subband_cqi != NULL) {
   //printf("=== Subband CQI info ===\n");
 
   uint32_t nof_subbands = cfg->nof_subbands;
   uint32_t nof_prb      = q->cell.nof_prb; 
-  if (cqi_log_file != NULL) {
-    fprintf(cqi_log_file, "TTI = %d: ", sf->tti);
-    for (uint32_t sb = 0; sb < nof_subbands; ++sb) {
-        uint32_t rb_start = sb * nof_prb / nof_subbands;
-        fprintf(cqi_log_file, "SB%u=%u ", sb, cfg->subband_cqi[rb_start]);
-    }
-    fprintf(cqi_log_file, "\n");
-    fflush(cqi_log_file); // 可选，但可防止突然断电丢失数据
-}
+//   if (cqi_log_file != NULL) {
+//     fprintf(cqi_log_file, "TTI = %d: ", sf->tti);
+//     for (uint32_t sb = 0; sb < nof_subbands; ++sb) {
+//         uint32_t rb_start = sb * nof_prb / nof_subbands;
+//         fprintf(cqi_log_file, "SB%u=%u ", sb, cfg->subband_cqi[rb_start]);
+//     }
+//     fprintf(cqi_log_file, "\n");
+//     fflush(cqi_log_file); // 可选，但可防止突然断电丢失数据
+// }
   // for (uint32_t sb = 0; sb < nof_subbands; ++sb) {
   //   uint32_t rb_start = sb * nof_prb / nof_subbands;
   //  // printf("SB %u: CQI = %u\n", sb, cfg->subband_cqi[rb_start]);
@@ -1162,7 +1191,7 @@ if (cfg->has_subband_cqi && cfg->subband_cqi != NULL) {
   static float cqi_to_snr_table[15] = {
       1.95, 4, 6, 8, 10, 11.95, 14.05, 16,
       17.9, 20.9, 22.5, 24.75, 25.5, 27.30, 29
-  }; //3ghz /plot the cqi through time/ plot the uhd freq uhd_fft —help
+  };
 
 
   // Compute linear amplitude from CQI→SNR→amplitude
@@ -1221,34 +1250,6 @@ if (cfg->has_subband_cqi && cfg->subband_cqi != NULL) {
  // printf("Power before = %.3f, after = %.3f, norm = %.3f\n", power_before, power_after, norm_factor);
 
 }
-
-
-
-
-
-
-    /* mapping to resource elements */
-    uint32_t lstart = SRSRAN_NOF_CTRL_SYMBOLS(q->cell, sf->cfi);
-    for (i = 0; i < q->cell.nof_ports; i++) {
-      srsran_pdsch_put(q, q->symbols[i], sf_symbols[i], &cfg->grant, lstart, sf->tti % 10);
-
-
-// ///testtttt
-// int rb_start = -1;
-// int rb_len = 0;
-
-// for (int rb = 0; rb < SRSRAN_MAX_PRB; rb++) {
-//     if (cfg->grant.prb_idx[0][rb]) {
-//         if (rb_start == -1) rb_start = rb;
-//         rb_len++;
-//     }
-// }
-
-
-
-
-
-    }
 
     if (cfg->meas_time_en) {
       gettimeofday(&t[2], NULL);

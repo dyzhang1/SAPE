@@ -985,9 +985,51 @@ static void fill_res(srsran_chest_dl_t* q, srsran_chest_dl_res_t* res)
   }
 
 //testttttt
-// ========== Subband CQI (averaged over all antennas) ==========
+// ========== Subband CQI (over all prbs) ==========
+
+uint8_t prb_cqi[SRSRAN_MAX_PRB];
 const uint32_t nre_per_prb      = SRSRAN_NRE;  
-const uint32_t prbs_per_subband = 4;
+
+for (uint32_t prb = 0; prb < q->cell.nof_prb; ++prb) {
+    float power_sum = 0.0f;
+    float noise_sum = 0.0f;
+    uint32_t count = 0;
+
+    uint32_t re_start = prb * nre_per_prb;
+    uint32_t re_end   = re_start + nre_per_prb;
+
+    for (uint32_t a = 0; a < q->nof_rx_antennas; ++a) {
+      for (uint32_t port = 0; port < q->cell.nof_ports; ++port) {
+        cf_t* ce_vec = res->ce[port][a];
+
+        for (uint32_t re = re_start; re < re_end && re < res->nof_re; ++re) {
+          float real = crealf(ce_vec[re]);
+          float imag = cimagf(ce_vec[re]);
+          float pwr = real * real + imag * imag;
+
+          power_sum += pwr;
+          noise_sum += q->noise_estimate[a][port];
+          count++;
+        }
+      }
+    }
+
+    float avg_power = (count > 0) ? (power_sum / count) : 0;
+    float avg_noise = (count > 0) ? (noise_sum / count) : 1e-6;
+
+    float snr_lin = avg_power / avg_noise;
+    float snr_db  = srsran_convert_power_to_dB(snr_lin);
+    uint8_t cqi = srsran_cqi_from_snr(snr_db);
+
+    prb_cqi[prb] = cqi;
+}
+
+
+
+
+// ========== Subband CQI (averaged over all antennas) ==========
+//const uint32_t nre_per_prb      = SRSRAN_NRE;  
+const uint32_t prbs_per_subband = 12;
 const uint32_t nre_per_sb       = nre_per_prb * prbs_per_subband;
 const uint32_t num_subbands     = 4;
 
@@ -1033,6 +1075,25 @@ for (uint32_t sb = 0; sb < num_subbands; ++sb) {
   res->subband_cqi[sb] = cqi;
 
 }
+static int dump_count = 1; // 静态变量做自增序号
+
+FILE* f = fopen("/mnt/ramdisk/prb_cqi_trace.txt", "a");
+fprintf(f, "# %d\n", dump_count++);
+
+// 打印 PRB
+for (uint32_t prb = 0; prb < q->cell.nof_prb; ++prb) {
+    fprintf(f, "PRB%u=%u ", prb+1, prb_cqi[prb]);
+}
+fprintf(f, "\n");
+
+// 打印 SUB
+for (uint32_t sb = 0; sb < num_subbands; ++sb) {
+    fprintf(f, "SUB%u=%u ", sb+1, res->subband_cqi[sb]);
+}
+fprintf(f, "\n\n");
+
+fclose(f);
+
 
 
 }

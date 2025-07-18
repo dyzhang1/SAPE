@@ -47,7 +47,7 @@ static int cqi_hl_subband_pack(srsran_cqi_cfg_t* cfg, srsran_cqi_hl_subband_t* m
   srsran_bit_unpack(msg->wideband_cqi_cw0, &body_ptr, 4);
   for (uint32_t i = 0; i < cfg->N; ++i) {
     int8_t diff = msg->subband_diff_cqi_cw0[i];
-    uint8_t encoded = (diff + 2) & 0x3;  // 映射到 [0, 3]
+    uint8_t encoded = (diff + 2) & 0x3;  //[0,3]
     srsran_bit_unpack(encoded, &body_ptr, 2);
   }
   
