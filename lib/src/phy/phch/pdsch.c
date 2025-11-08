@@ -1147,44 +1147,18 @@ int srsran_pdsch_encode(srsran_pdsch_t*     q,
       srsran_pdsch_put(q, q->symbols[i], sf_symbols[i], &cfg->grant, lstart, sf->tti % 10);
     }
 
-// ///testtttt
-// int rb_start = -1;
-// int rb_len = 0;
-
-// for (int rb = 0; rb < SRSRAN_MAX_PRB; rb++) {
-//     if (cfg->grant.prb_idx[0][rb]) {
-//         if (rb_start == -1) rb_start = rb;
-//         rb_len++;
-//     }
-// }
 
 
 
 
 
 
-    // === Predistortion based on subband CQI ===
+
+    // === Power Equalization based on subband CQI ===
 if (cfg->has_subband_cqi && cfg->subband_cqi != NULL) {
-  //printf("=== Subband CQI info ===\n");
 
   uint32_t nof_subbands = cfg->nof_subbands;
   uint32_t nof_prb      = q->cell.nof_prb; 
-//   if (cqi_log_file != NULL) {
-//     fprintf(cqi_log_file, "TTI = %d: ", sf->tti);
-//     for (uint32_t sb = 0; sb < nof_subbands; ++sb) {
-//         uint32_t rb_start = sb * nof_prb / nof_subbands;
-//         fprintf(cqi_log_file, "SB%u=%u ", sb, cfg->subband_cqi[rb_start]);
-//     }
-//     fprintf(cqi_log_file, "\n");
-//     fflush(cqi_log_file); // 可选，但可防止突然断电丢失数据
-// }
-  // for (uint32_t sb = 0; sb < nof_subbands; ++sb) {
-  //   uint32_t rb_start = sb * nof_prb / nof_subbands;
-  //  // printf("SB %u: CQI = %u\n", sb, cfg->subband_cqi[rb_start]);
-  // }
-
-  // uint32_t nof_subbands = cfg->nof_subbands;
-  // uint32_t nof_prb      = q->cell.nof_prb;
 
   float amp[15] = {1.0f};
 
@@ -1202,9 +1176,8 @@ if (cfg->has_subband_cqi && cfg->subband_cqi != NULL) {
           float snr_db = cqi_to_snr_table[cqi];
           amp[sb] = powf(10.0f, snr_db / 20.0f);
           float raw_amp = powf(10.0f, snr_db / 20.0f);
-          amp[sb] = (raw_amp > 100.0f) ? 100.0f : raw_amp; // 最大增益保护
+          amp[sb] = (raw_amp > 100.0f) ? 100.0f : raw_amp; // maxium protection
 
-        //  printf("SB %u: AMP = %f\n", sb, amp[sb]);
 
       } else {
           amp[sb] = 1.0f; // fallback
@@ -1220,11 +1193,11 @@ if (cfg->has_subband_cqi && cfg->subband_cqi != NULL) {
   for (uint32_t rb = 0; rb < q->cell.nof_prb; ++rb) {
       if (!cfg->grant.prb_idx[0][rb]) continue;
   
-      // 当前 PRB 属于哪个 subband
+      // current prb's subband
       uint32_t sb_idx = (rb * cfg->nof_subbands) / q->cell.nof_prb;
   
       for (uint32_t k = 0; k < 12; ++k) {
-          if (re_idx >= cfg->grant.nof_re) break;  // 保证索引不越界
+          if (re_idx >= cfg->grant.nof_re) break;  // boundary
   
           for (uint32_t port = 0; port < q->cell.nof_ports; ++port) {
               q->symbols[port][re_idx] /= amp[sb_idx];

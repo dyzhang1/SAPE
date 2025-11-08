@@ -141,24 +141,6 @@ static int cqi_ue_subband_pack(srsran_cqi_cfg_t* cfg, srsran_cqi_ue_diff_subband
   //return 4 + 2 + cfg->L;
 }
 
-// //testtt
-// static int cqi_ue_subband_pack(srsran_cqi_cfg_t* cfg, srsran_cqi_ue_diff_subband_t* msg, uint8_t* buff)
-// {
-//   memset(buff, 0, SRSRAN_CQI_MAX_BITS); // 清空输出缓冲区
-//   uint32_t bit_offset = 0;
-
-//   // 打包 wideband CQI
-//   srsran_bit_pack_to_buffer(msg->wideband_cqi, buff, &bit_offset, 4);
-
-//   // 打包 subband diff CQI
-//   for (uint32_t i = 0; i < cfg->L; ++i) {
-//     uint8_t encoded = (msg->subband_diff_cqi[i] + 2) & 0x3;
-//     srsran_bit_pack_to_buffer(encoded, buff, &bit_offset, 2);
-//   }
-
-//   return bit_offset;  // 返回bit长度
-// }
-
 
 
 

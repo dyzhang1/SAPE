@@ -984,7 +984,7 @@ static void fill_res(srsran_chest_dl_t* q, srsran_chest_dl_res_t* res)
     }
   }
 
-//testttttt
+//calculate subband CQI
 // ========== Subband CQI (over all prbs) ==========
 
 uint8_t prb_cqi[SRSRAN_MAX_PRB];
