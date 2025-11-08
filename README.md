@@ -18,3 +18,6 @@ For application features, build instructions and user guides see the [srsRAN 4G 
 For the documentation and implementation of SAPE on srsRAN, please refer to the [SAPE Documents](./SAPE%20Documents) folder.
 
 For the MATLAB simulation models and results, please refer to the [MATLAB Models](./MATLAB%20Models) folder.
+
+For the figures and experimental results used in the paper, please refer to the [Paper Materials](./Paper%20Materials) folder.
+
