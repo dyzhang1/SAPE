@@ -19,5 +19,7 @@ For the documentation and implementation of SAPE on srsRAN, please refer to the 
 
 For the MATLAB simulation models and results, please refer to the [MATLAB Models](./MATLAB%20Models) folder.
 
+The MATLAB Channel dataset (.mat file) can be downloaded from [Google Drive](https://drive.google.com/drive/folders/1b9MiAwl0ipeh0tITQEySzdk-6IzgRc1k?usp=sharing).
+
 For the figures and experimental results used in the paper, please refer to the [Paper Materials](./Paper%20Materials) folder.
 
