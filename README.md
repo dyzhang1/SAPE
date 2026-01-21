@@ -17,7 +17,8 @@ For application features, build instructions and user guides see the [srsRAN 4G 
 
 For the documentation and implementation of SAPE on srsRAN, please refer to the [SAPE Documents](./SAPE%20Documents) folder.
 
-For the MATLAB simulation models and results, please refer to the [MATLAB Models](./MATLAB%20Models) folder.
+For the MATLAB simulation models and results, please refer to the [MATLAB Models](./MATLAB%20Models) folder. These scripts require **MATLAB R2024b** due to updates in dependent MathWorks examples.
+
 
 The MATLAB Channel dataset (.mat file) can be downloaded from [Google Drive](https://drive.google.com/drive/folders/1b9MiAwl0ipeh0tITQEySzdk-6IzgRc1k?usp=sharing).
 
