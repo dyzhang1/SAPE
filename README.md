@@ -22,7 +22,6 @@ For the MATLAB simulation models and results, please refer to the [MATLAB Models
 
 The MATLAB Channel dataset (.mat file) can be downloaded from [Google Drive](https://drive.google.com/drive/folders/1b9MiAwl0ipeh0tITQEySzdk-6IzgRc1k?usp=sharing).
 
-For the figures and experimental results used in the paper, please refer to the [Paper Materials](./Paper%20Materials) folder.
 
 ## Citation
 
