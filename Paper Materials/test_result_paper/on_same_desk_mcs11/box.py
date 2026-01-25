@@ -1,8 +1,10 @@
 import os
 import matplotlib.pyplot as plt
 import numpy as np
+plt.rcParams['pdf.fonttype'] = 42
+plt.rcParams['ps.fonttype'] = 42
 
-# 提取函数保持不变
+
 def extract_brate_bler_from_file(filename):
     brate_list = []
     bler_list = []
@@ -127,7 +129,6 @@ plt.tight_layout()
 plt.savefig("bler_boxplot.pdf")
 #plt.show()
 
-# ✅ BRATE grouped boxplot
 plt.figure(figsize=(7, 4))
 b1 = plt.boxplot(brate_with, positions=positions_with, widths=0.25,
                  patch_artist=True, boxprops=dict(facecolor='skyblue'),

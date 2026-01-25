@@ -1,5 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
+plt.rcParams['pdf.fonttype'] = 42
+plt.rcParams['ps.fonttype'] = 42
+
 
 def extract_brate_bler_from_file(filename):
     brate_list = []
