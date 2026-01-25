@@ -24,3 +24,22 @@ The MATLAB Channel dataset (.mat file) can be downloaded from [Google Drive](htt
 
 For the figures and experimental results used in the paper, please refer to the [Paper Materials](./Paper%20Materials) folder.
 
+## Citation
+
+If you use this codebase, please cite our paper:
+
+Dingyu Zhang, Ish Kumar Jain, and Renjie Zhao. 2026. SAPE: Demystifying Sub-band Aware Power-Equalization for Cellular Networks. In *The 27th International Workshop on Mobile Computing Systems and Applications (HotMobile ’26), February 25–26, 2026, Atlanta, GA, USA*. ACM, New York, NY, USA, 6 pages. https://doi.org/10.1145/3789514.3792036
+
+```bibtex
+@inproceedings{zhang2026sape,
+  author    = {Dingyu Zhang and Ish Kumar Jain and Renjie Zhao},
+  title     = {{SAPE: Demystifying Sub-band Aware Power-Equalization for Cellular Networks}},
+  booktitle = {The 27th International Workshop on Mobile Computing Systems and Applications (HotMobile '26)},
+  pages     = {1--6},
+  year      = {2026},
+  address   = {Atlanta, GA, USA},
+  publisher = {ACM},
+  doi       = {10.1145/3789514.3792036},
+  url       = {https://doi.org/10.1145/3789514.3792036}
+}
+
