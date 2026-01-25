@@ -42,6 +42,7 @@ Dingyu Zhang, Ish Kumar Jain, and Renjie Zhao. 2026. SAPE: Demystifying Sub-band
   doi       = {10.1145/3789514.3792036},
   url       = {https://doi.org/10.1145/3789514.3792036}
 }
+```
 
 ## License
 
