@@ -15,10 +15,17 @@ The srsRAN suite includes:
 
 For application features, build instructions and user guides see the [srsRAN 4G documentation](https://docs.srsran.com/projects/4g/).
 
+
+## SAPE and Sub-band CQI Reporting Integration
+
+This repository contains a unified implementation of SAPE (Sub-band Aware Power-Equalization) on top of srsRAN 4G, together with the sub-band CQI reporting mechanisms required to enable SAPE.
+
+In addition to the SAPE power equalization and predistortion logic, this codebase integrates four 3GPP-compliant sub-band CQI reporting mechanisms across the UE and eNodeB, enabling frequency-selective channel awareness at sub-band granularity. These mechanisms are fully implemented as part of the system and are tightly coupled with SAPE, rather than provided as standalone examples.
+
+
 For the documentation and implementation of SAPE on srsRAN, please refer to the [SAPE Documents](./SAPE%20Documents) folder.
 
 For the MATLAB simulation models and results, please refer to the [MATLAB Models](./MATLAB%20Models) folder. These scripts require **MATLAB R2024b** due to updates in dependent MathWorks examples.
-
 
 The MATLAB Channel dataset (.mat file) can be downloaded from [Google Drive](https://drive.google.com/drive/folders/1b9MiAwl0ipeh0tITQEySzdk-6IzgRc1k?usp=sharing).
 
@@ -42,6 +49,7 @@ Dingyu Zhang, Ish Kumar Jain, and Renjie Zhao. 2026. SAPE: Demystifying Sub-band
   url       = {https://doi.org/10.1145/3789514.3792036}
 }
 ```
+
 
 ## License
 
