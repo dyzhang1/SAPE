@@ -20,7 +20,7 @@ For application features, build instructions and user guides see the [srsRAN 4G 
 
 This repository contains a unified implementation of SAPE (Sub-band Aware Power-Equalization) on top of srsRAN 4G, together with the sub-band CQI reporting mechanisms required to enable SAPE.
 
-In addition to the SAPE power equalization and predistortion logic, this codebase integrates four 3GPP-compliant sub-band CQI reporting mechanisms across the UE and eNodeB, enabling frequency-selective channel awareness at sub-band granularity. These mechanisms are fully implemented as part of the system and are tightly coupled with SAPE, rather than provided as standalone examples.
+In addition to the SAPE power equalization and predistortion logic, this codebase integrates **four 3GPP-compliant sub-band CQI reporting** mechanisms across the UE and eNodeB, enabling frequency-selective channel awareness at sub-band granularity. These mechanisms are fully implemented as part of the system and are tightly coupled with SAPE, rather than provided as standalone examples.
 
 
 For the documentation and implementation of SAPE on srsRAN, please refer to the [SAPE Documents](./SAPE%20Documents) folder.
