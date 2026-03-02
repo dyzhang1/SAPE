@@ -16,6 +16,12 @@ The srsRAN suite includes:
 For application features, build instructions and user guides see the [srsRAN 4G documentation](https://docs.srsran.com/projects/4g/).
 
 
+## Full Paper & Slides
+
+📄 **[SAPE Full Paper (PDF)](./SAPE%20Paper/SAPE_full_paper.pdf)**  
+📄 **[HotMobile'26 Presentation Slides (PPTX)](./SAPE%20Documents/HotMobile2026_SAPE_Presentation.pptx)**  
+
+
 ## SAPE and Sub-band CQI Reporting Integration
 
 This repository contains a unified implementation of SAPE (Sub-band Aware Power-Equalization) on top of srsRAN 4G, together with the sub-band CQI reporting mechanisms required to enable SAPE.
