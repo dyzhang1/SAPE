@@ -19,10 +19,11 @@ For application features, build instructions and user guides see the [srsRAN 4G 
 ## Full Paper & Slides
 
 📄 **[SAPE Full Paper (PDF)](
-https://raw.githubusercontent.com/dyzhang1/SAPE/main/SAPE%20Paper/SAPE_full_paper.pdf
+https://raw.githubusercontent.com/dyzhang1/SAPE/master/SAPE%20Paper/SAPE_full_paper.pdf
 )**
+
 📑 **[HotMobile'26 Presentation Slides (PPTX)](
-https://raw.githubusercontent.com/dyzhang1/SAPE/main/SAPE%20Paper/HotMobile2026_SAPE_Presentation.pptx
+https://raw.githubusercontent.com/dyzhang1/SAPE/master/SAPE%20Paper/HotMobile2026_SAPE_Presentation.pptx
 )** 
 
 
