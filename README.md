@@ -18,8 +18,12 @@ For application features, build instructions and user guides see the [srsRAN 4G 
 
 ## Full Paper & Slides
 
-📄 **[SAPE Full Paper (PDF)](./SAPE%20Paper/SAPE_full_paper.pdf)**  
-📄 **[HotMobile'26 Presentation Slides (PPTX)](./SAPE%20Documents/HotMobile2026_SAPE_Presentation.pptx)**  
+📄 **[SAPE Full Paper (PDF)](
+https://raw.githubusercontent.com/dyzhang1/SAPE/main/SAPE%20Paper/SAPE_full_paper.pdf
+)**  
+📑 **[HotMobile'26 Presentation Slides (PPTX)](
+https://raw.githubusercontent.com/dyzhang1/SAPE/main/SAPE%20Documents/HotMobile2026_SAPE_Presentation.pptx
+)** 
 
 
 ## SAPE and Sub-band CQI Reporting Integration
